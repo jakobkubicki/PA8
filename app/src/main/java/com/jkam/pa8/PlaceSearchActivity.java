@@ -48,10 +48,12 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -61,11 +63,11 @@ import java.util.Map;
 
 public class PlaceSearchActivity extends AppCompatActivity {
     List<Place> results;
-    String latL = "0";
-    String longL = "0";
+    String latL = "";
+    String longL = "";
     CustomAdapter adapter = new CustomAdapter();
 
-    String URL = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?keyword=cruise&location=-33.8670522%2C151.1957362&radius=1500&type=restaurant&key=AIzaSyAVW_58WKYueAAOforWo7wgvdVXbF2UnZE";
+    String URL;
     JSONObject jsonResponse = new JSONObject();
     JSONObject jSONObject;
 
@@ -88,9 +90,30 @@ public class PlaceSearchActivity extends AppCompatActivity {
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        mFusedLocationClient.getLastLocation()
+                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        // Got last known location. In some rare situations this can be null.
+                        if (location != null) {
+                            // Logic to handle location object
+                            latL = String.valueOf(location.getLatitude());
+                            longL = String.valueOf(location.getLongitude());
+                            System.out.println(latL);
+                            URL = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?keyword=&location=" + latL +"%2C" + longL + "&radius=1500&type=restaurant&key=AIzaSyAVW_58WKYueAAOforWo7wgvdVXbF2UnZE";
+                            getDatabase();
+                        }
+                    }
+                });
+
+
+        System.out.println(URL);
         // method to get the location
 
-        getDatabase();
+
         searchEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
@@ -101,6 +124,7 @@ public class PlaceSearchActivity extends AppCompatActivity {
                 return false;
             }
         });
+
     }
 
 
@@ -158,6 +182,8 @@ public class PlaceSearchActivity extends AppCompatActivity {
     }
 
     private LocationCallback mLocationCallback = new LocationCallback() {
+
+
 
         @Override
         public void onLocationResult(LocationResult locationResult) {
@@ -273,7 +299,6 @@ public class PlaceSearchActivity extends AppCompatActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
-
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();
@@ -285,8 +310,6 @@ public class PlaceSearchActivity extends AppCompatActivity {
         }
         return super.onOptionsItemSelected(item);
     }
-
-
 
     class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.CustomViewHolder> {
 
