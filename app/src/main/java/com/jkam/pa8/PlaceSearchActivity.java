@@ -11,18 +11,25 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Criteria;
+import android.location.Geocoder;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Looper;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -39,6 +46,7 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
@@ -47,6 +55,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 
@@ -55,17 +64,13 @@ public class PlaceSearchActivity extends AppCompatActivity {
     String latL = "0";
     String longL = "0";
     CustomAdapter adapter = new CustomAdapter();
+
     String URL = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?keyword=cruise&location=-33.8670522%2C151.1957362&radius=1500&type=restaurant&key=AIzaSyAVW_58WKYueAAOforWo7wgvdVXbF2UnZE";
     JSONObject jsonResponse = new JSONObject();
     JSONObject jSONObject;
 
-    // initializing
-    // FusedLocationProviderClient
-    // object
     FusedLocationProviderClient mFusedLocationClient;
 
-    // Initializing other items
-    // from layout file
     int PERMISSION_ID = 44;
 
     @Override
@@ -79,12 +84,11 @@ public class PlaceSearchActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(adapter);
 
-        EditText searchEditText = (EditText) findViewById(R.id.editTextSearch);
+        Button searchEditText = findViewById(R.id.button);
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         // method to get the location
-        getLastLocation();
 
         getDatabase();
         searchEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -98,6 +102,7 @@ public class PlaceSearchActivity extends AppCompatActivity {
             }
         });
     }
+
 
     @SuppressLint("MissingPermission")
     private void getLastLocation() {
@@ -210,10 +215,16 @@ public class PlaceSearchActivity extends AppCompatActivity {
                     for (int i = 0; i < 10; i++) {
                         jSONObject = locations.getJSONObject(i);
                         System.out.println(jSONObject);
-                        String name = jSONObject.getString("brand_name");
-                        String desc = "Ingredients: " + jSONObject.getString("active_ingredients");
-                        String manu = "Manufacturer: " + jSONObject.getString("labeler_name");
-                        Place newPlace = new Place("name", "desc"," manu", false, "test");
+                        String name = jSONObject.getString("name");
+//                        Double lat = Double.parseDouble(jSONObject.getString("lat"));
+//                        Double lng = Double.parseDouble(jSONObject.getString("lng"));
+                        String rating = jSONObject.getString("rating");
+//                        Geocoder geocoder;
+//                        List<Address> addresses;
+//                        geocoder = new Geocoder(PlaceSearchActivity.this, Locale.getDefault());
+//                        addresses = geocoder.getFromLocation(lat, lng, 1); // Here 1 represent max location result to returned, by documents it recommended 1 to 5
+//                        String address = addresses.get(0).getAddressLine(0); // If any additional address line present than only, check with max available address lines by getMaxAddressLineIndex()
+                        Place newPlace = new Place(name, "address"," manu", false, rating);
                         results.add(newPlace);
                         adapter.notifyDataSetChanged();
                     }
@@ -254,35 +265,61 @@ public class PlaceSearchActivity extends AppCompatActivity {
         queue.add(request);
     }
 
-    // create an action bar button
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // R.menu.mymenu is a reference to an xml file named mymenu.xml which should be inside your res/menu directory.
-        // If you don't have res/menu, just create a directory named "menu" inside res
+        // inflate the menu
+        // this adds items to the app bar
         getMenuInflater().inflate(R.menu.menu, menu);
         return super.onCreateOptionsMenu(menu);
     }
 
-    // handle button activities
+
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (id == R.id.current_location) {
-            getLastLocation();
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        int itemId = item.getItemId();
+        switch(itemId) {
+            case R.id.location:
+                getDatabase();
+                Toast.makeText(this, "TODO: add item", Toast.LENGTH_SHORT).show();
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
+
+
     class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.CustomViewHolder> {
-        class CustomViewHolder extends RecyclerView.ViewHolder {
-            TextView text1;
+
+        class CustomViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
+            TextView myText1;
+            TextView myText2;
+            TextView myText3;
+
             public CustomViewHolder(@NonNull View itemView) {
                 super(itemView);
-                text1 = itemView.findViewById(android.R.id.text1);
+                myText1 = itemView.findViewById(R.id.myText1);
+                myText2 = itemView.findViewById(R.id.rating);
+                itemView.setOnClickListener(this);
+                itemView.setOnLongClickListener(this);
             }
 
-            public void updateView(Place s) {
-                text1.setText(s.getName());
+            public void updateView(Place b) {
+                myText1.setText(b.getName());
+                myText2.setText(b.getReview());
+            }
+
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(PlaceSearchActivity.this, PlaceDetailActivity.class);
+//                intent.putExtra("index", getAdapterPosition());
+//                intent.putExtra("title", apiList.get(getAdapterPosition()).getName());
+//                intent.putExtra("watched", apiList.get(getAdapterPosition()).getDescription());
+//                launcher.launch(intent);
+            }
+
+            @Override
+            public boolean onLongClick(View view) {
+                return false;
             }
         }
 
@@ -290,7 +327,7 @@ public class PlaceSearchActivity extends AppCompatActivity {
         @Override
         public CustomViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             View view = LayoutInflater.from(PlaceSearchActivity.this)
-                    .inflate(android.R.layout.simple_list_item_1, parent, false);
+                    .inflate(R.layout.card, parent, false);
             return new CustomViewHolder(view);
         }
 

@@ -32,6 +32,10 @@ public class Place {
 
     public void setPhone(String newPhone) { name = newPhone; }
 
+    public String getReview() { return review; }
+
+    public void setReview(String newReview) { name = newReview; }
+
     public boolean getOpen() { return open; }
 
     public void setOpen(boolean open) { this.open = open; }
