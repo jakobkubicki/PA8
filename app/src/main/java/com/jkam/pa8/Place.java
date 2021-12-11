@@ -6,6 +6,7 @@ public class Place {
     private String phoneNum;
     private boolean open;
     private String review;
+    private String url;
 
     public Place(String name, String address, String phoneNum, boolean open, String review) {
         this.name = name;
@@ -21,6 +22,10 @@ public class Place {
     }
 
     public String getName() { return name; }
+
+    public void setURL(String newName) { name = newName; }
+
+    public String getURL() { return name; }
 
     public void setName(String newName) { name = newName; }
 

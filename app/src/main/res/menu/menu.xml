@@ -6,4 +6,10 @@
         android:icon="@drawable/currentlocation"
         android:title="@string/action_favorite"
         app:showAsAction="ifRoom"/>
+
+    <item
+        android:id="@+id/search"
+        android:icon="@drawable/search"
+        android:title="@string/action_favorite"
+        app:showAsAction="ifRoom"/>
 </menu>
