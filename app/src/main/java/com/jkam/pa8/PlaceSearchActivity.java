@@ -1,3 +1,15 @@
+/**
+ * This program creates Search for nerby restraunts
+ * CPSC 312-01, Fall 2019
+ * Programming Assignment #8
+ * No sources to cite.
+ *
+ * @author Jakob Kubicci and Ahmad Moltafet
+ * @version v1.0 12/10/21
+ */
+
+
+
 package com.jkam.pa8;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -53,6 +65,7 @@ import java.util.List;
 import java.util.Map;
 
 
+
 public class PlaceSearchActivity extends AppCompatActivity {
     ActivityResultLauncher<Intent> launcher;
     List<Place> results;
@@ -70,6 +83,11 @@ public class PlaceSearchActivity extends AppCompatActivity {
     FusedLocationProviderClient mFusedLocationClient;
     int PERMISSION_ID = 44;
 
+    /**
+     Creates the place search
+     *
+     * @param savedInstanceState
+=     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -92,7 +110,10 @@ public class PlaceSearchActivity extends AppCompatActivity {
                 });
     }
 
-
+    /**
+     Gets the last location
+     *
+     */
     @SuppressLint("MissingPermission")
     private void getLastLocation() {
         if (checkPermissions()) {
@@ -119,6 +140,10 @@ public class PlaceSearchActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     Requests new location
+     *
+     */
     @SuppressLint("MissingPermission")
     private void requestNewLocationData() {
         LocationRequest mLocationRequest = new LocationRequest();
@@ -130,7 +155,12 @@ public class PlaceSearchActivity extends AppCompatActivity {
         mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper());
     }
 
+
     private LocationCallback mLocationCallback = new LocationCallback() {
+        /**
+         location results
+         *
+         */
         @Override
         public void onLocationResult(LocationResult locationResult) {
             Location mLastLocation = locationResult.getLastLocation();
@@ -139,10 +169,18 @@ public class PlaceSearchActivity extends AppCompatActivity {
         }
     };
 
+    /**
+     Checks location permissions
+     *
+     */
     private boolean checkPermissions() {
         return ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
 
+    /**
+     Requests permission for location
+     *
+     */
     private void requestPermissions() {
         ActivityCompat.requestPermissions(this, new String[]{
                 Manifest.permission.ACCESS_COARSE_LOCATION,
@@ -154,6 +192,10 @@ public class PlaceSearchActivity extends AppCompatActivity {
         return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
     }
 
+    /**
+     Results of the location
+     *
+     */
     @Override
     public void
     onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -165,6 +207,10 @@ public class PlaceSearchActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     Returns the list of places
+     *
+     */
     public void getDatabase(){
         results.clear();
         adapter.notifyDataSetChanged();
@@ -221,6 +267,11 @@ public class PlaceSearchActivity extends AppCompatActivity {
         queue.add(request);
     }
 
+    /**
+     Gets the details for each place
+     *
+     * @param newPlace object
+     */
     public void getDetails(Place newPlace){
         RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
         StringRequest request = new StringRequest(Request.Method.GET, detailsRequest,
@@ -231,11 +282,18 @@ public class PlaceSearchActivity extends AppCompatActivity {
                             detailResponse = response;
                             try {
                                 JSONObject jsonObject = new JSONObject(response);
-                                System.out.println(jsonObject);
-                                //JSONArray locations = jsonResponse.getJSONObject("result");
-                                //System.out.println(locations);
+                                JSONObject locations = jsonObject.getJSONObject("result");
+                                String phone = locations.getString("formatted_phone_number");
+                                newPlace.setPhone(phone);
+                                JSONObject opening_hours = locations.getJSONObject("opening_hours");
+                                boolean open = opening_hours.getBoolean("open_now");
+                                newPlace.setOpen(open);
+                                String photo = locations.getString("icon");
+                                newPlace.setURL(photo);
+                                System.out.println(phone);
+
                             }catch (JSONException err){
-                                System.out.println("Error");
+                                System.out.println("Error (get details)");
                             }
                             results.add(newPlace);
                             adapter.notifyDataSetChanged();
@@ -291,26 +349,50 @@ public class PlaceSearchActivity extends AppCompatActivity {
                 itemView.setOnLongClickListener(this);
             }
 
+            /**
+             Updates view for each part
+             *
+             * @param b to pass in
+             */
             public void updateView(Place b) {
                 myText1.setText(b.getName());
                 myText2.setText(b.getAddress());
             }
 
+            /**
+             When user clicks
+             *
+             * @param v view
+             */
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(PlaceSearchActivity.this, PlaceDetailActivity.class);
                 intent.putExtra("index", getAdapterPosition());
                 intent.putExtra("name", results.get(getAdapterPosition()).getName());
                 intent.putExtra("address", results.get(getAdapterPosition()).getAddress());
+                intent.putExtra("phone", results.get(getAdapterPosition()).getPhone());
+                intent.putExtra("open_now", results.get(getAdapterPosition()).getOpen());
+                intent.putExtra("url", results.get(getAdapterPosition()).getURL());
                 launcher.launch(intent);
             }
 
+            /**
+             long click delete
+             *
+             * @param view to delete
+             */
             @Override
             public boolean onLongClick(View view) {
                 return false;
             }
         }
 
+        /**
+         Create the view
+         *
+         * @param parent, viewType
+         * @return area of a circle
+         */
         @NonNull
         @Override
         public CustomViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -319,12 +401,22 @@ public class PlaceSearchActivity extends AppCompatActivity {
             return new CustomViewHolder(view);
         }
 
+        /**
+         Updates the view for each card
+         *
+         * @param holder and position
+         */
         @Override
         public void onBindViewHolder(@NonNull CustomViewHolder holder, int position) {
             Place b = results.get(position);
             holder.updateView(b);
         }
 
+        /**
+         Getter for the number of places
+         *
+         * @return number of places
+         */
         @Override
         public int getItemCount() {
             return results.size();
