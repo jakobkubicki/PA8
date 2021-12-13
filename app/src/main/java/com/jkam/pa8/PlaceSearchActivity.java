@@ -290,6 +290,9 @@ public class PlaceSearchActivity extends AppCompatActivity {
                                 newPlace.setOpen(open);
                                 String photo = locations.getString("icon");
                                 newPlace.setURL(photo);
+                                JSONArray reviews = locations.getJSONArray("reviews");
+                                JSONObject review = reviews.getJSONObject(0);
+                                newPlace.setReview(review.getString("text"));
                                 System.out.println(phone);
 
                             }catch (JSONException err){
@@ -373,6 +376,7 @@ public class PlaceSearchActivity extends AppCompatActivity {
                 intent.putExtra("phone", results.get(getAdapterPosition()).getPhone());
                 intent.putExtra("open_now", results.get(getAdapterPosition()).getOpen());
                 intent.putExtra("url", results.get(getAdapterPosition()).getURL());
+                intent.putExtra("review", results.get(getAdapterPosition()).getReview());
                 launcher.launch(intent);
             }
 

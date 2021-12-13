@@ -41,6 +41,7 @@ public class PlaceDetailActivity extends AppCompatActivity {
         TextView titleView = findViewById(R.id.titleView);
         TextView phoneView = findViewById(R.id.phoneView);
         ImageView imageView = findViewById(R.id.imageView);
+        TextView reviewView = findViewById(R.id.reviewView);
         TextView body = findViewById(R.id.body);
         Intent intent = getIntent();
         if (intent != null) {
@@ -49,6 +50,7 @@ public class PlaceDetailActivity extends AppCompatActivity {
                     + intent.getStringExtra("name");
             titleView.setText(intent.getStringExtra("name") + " ");
             phoneView.setText(intent.getStringExtra("phone"));
+            reviewView.setText(intent.getStringExtra("review"));
             imageView.setImageDrawable(LoadImageFromWebOperations(imageUrl));
             body.setText(importedData);
         }

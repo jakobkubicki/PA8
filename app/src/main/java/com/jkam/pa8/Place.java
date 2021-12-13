@@ -111,7 +111,7 @@ public class Place {
      *
      * @param newReview
      */
-    public void setReview(String newReview) { name = newReview; }
+    public void setReview(String newReview) { review = newReview; }
 
     /**
      Getter for open now
